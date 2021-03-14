@@ -5,6 +5,7 @@
 #include <map>
 #include <algorithm>
 #include <set>
+#include <cmath>
 using namespace std;
 typedef pair<string, vector<int>> PSV;
 typedef pair<const string, vector<int>> refPSV;
@@ -15,7 +16,7 @@ class DuplicateStringFinder{
 	string plain;
 	vector<PSV>Where;
 	map<string, vector<int>>CMap;
-	map<int, vector<refPSV>> AppearMap;
+	map<int, vector<refPSV>> AppearMap/*, StatisticsMap*/;
 	vector<vector<int>*> PeriodMap;
 	set<int> Candidates;
 	
@@ -23,6 +24,7 @@ class DuplicateStringFinder{
 		this->plain = plain;
 	}
 	void StringAnalyzer(){
+		//initialize CMap to register first location owhere each characters appeared
 		size = plain.length();
 		for(int i = 0; i < size; i++)
 			CMap[string()+plain[i]].push_back(i);
@@ -30,24 +32,28 @@ class DuplicateStringFinder{
 		return;
 	}
 	void PrintPlain(){
+		//print plain text
 		for(auto c: plain)cout << c << " ";
 		cout << endl;
 		for(int i = 0; i < plain.size(); i++)cout << i%10 << " ";
 		cout << endl;
 	}
 	void SearchDuplicateString(){
+		//search strings that appeared 	more than twice
 		for(auto c = CMap.begin(); c != CMap.end(); c++)
 			MoreSearchDuplicateString(c);
+		//sort Where
 		sort(Where.begin(), Where.end(), [](PSV const &a, PSV const &b){
 				return a.first.length() < b.first.length();
 			}
 		);
+		//print Where
 		for(auto w: Where){
 			cout << "\"" << w.first << "\"";
 			for(auto v: w.second)cout << v << " ";
 			cout << endl;
 		}
-		
+		//extract strings most appeared in each group that has same number of length of string
 		for(const refPSV& w: Where){
 			//cout << w.first << ", " << w.second.size() << endl;
 			if(!AppearMap.count(w.first.length())){
@@ -60,10 +66,8 @@ class DuplicateStringFinder{
 				AppearMap[w.first.length()].clear();
 			AppearMap[w.first.length()].push_back(w);
 		}
-		
+		//print AppearMao
 		for(auto a: AppearMap){
-			int WordCount = a.first, NumAppearance = a.second[0].second.size();
-			cout << "\""<< a.first << "\"= Number of Appearance: " << NumAppearance << ", Score: "  << WordCount + NumAppearance << endl;
 			for(auto s: a.second){
 				cout << "--\"" << s.first << "\": ";
 				for(auto p: s.second) cout << p << " ";
@@ -71,7 +75,19 @@ class DuplicateStringFinder{
 			}
 			cout << endl;
 		}
-
+		//calculate scores and statistics
+		double ave = 0.0, square_ave = 0.0, standard_deviation = 0.0;
+		for(auto a: AppearMap){
+			int WordCount = a.first, NumAppearance = a.second[0].second.size();
+			double score = log2(WordCount) * NumAppearance;
+			ave += score;
+			square_ave  += (square_ave*square_ave);
+			cout << "\""<< a.first << "\"= Number of Appearance: " << NumAppearance << ", Score: "  << score << endl;
+		}
+		ave /= AppearMap.size();
+		square_ave /= AppearMap.size();
+		standard_deviation = square_ave - ave*ave;
+		//change AppearMap to PeriodMap
 		for(auto a: AppearMap){
 			for(auto s: a.second){
 				vector<int> *nowVector = new vector<int>;
@@ -84,12 +100,13 @@ class DuplicateStringFinder{
 				}
 			}		
 		}
+		//print all PeriodMap
 		for(auto p: PeriodMap){
 			cout << "PeriodMap: ";
 			for(auto now: *p)cout << now << ", ";
 			cout << endl;
 		}
-		//vector<vector<int>*> PeriodMap;
+		//calculate common divisors
 		for(auto p: PeriodMap){
 			//int min = (*p)[0];
 			int min = *min_element(p->begin(), p->end());
@@ -113,6 +130,7 @@ class DuplicateStringFinder{
 			}
 			cout << endl;
 		}
+		//print cnadidates
 		cout << "Candidates: ";
 		for(auto c: Candidates) cout << c << ", ";
 		cout << endl;
