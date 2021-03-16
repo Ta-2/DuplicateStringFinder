@@ -1,5 +1,6 @@
 #include <string.h>
 #include <iostream>
+#include <iomanip>
 #include <memory>
 #include <vector>
 #include <map>
@@ -24,7 +25,10 @@ class DuplicateStringFinder{
 		this->plain = plain;
 	}
 	void StringAnalyzer(){
+	
+		//-------------------------------------------------
 		//initialize CMap to register first location owhere each characters appeared
+		//-------------------------------------------------
 		size = plain.length();
 		for(int i = 0; i < size; i++)
 			CMap[string()+plain[i]].push_back(i);
@@ -32,14 +36,20 @@ class DuplicateStringFinder{
 		return;
 	}
 	void PrintPlain(){
+	
+		//-------------------------------------------------
 		//print plain text
+		//-------------------------------------------------
 		for(auto c: plain)cout << c << " ";
 		cout << endl;
 		for(int i = 0; i < plain.size(); i++)cout << i%10 << " ";
 		cout << endl;
 	}
-	void SearchDuplicateString(){
+	void SearchDuplicateString(double limen){
+	
+		//-------------------------------------------------
 		//search strings that appeared 	more than twice
+		//-------------------------------------------------
 		for(auto c = CMap.begin(); c != CMap.end(); c++)
 			MoreSearchDuplicateString(c);
 		//sort Where
@@ -52,8 +62,40 @@ class DuplicateStringFinder{
 			cout << "\"" << w.first << "\"";
 			for(auto v: w.second)cout << v << " ";
 			cout << endl;
+
 		}
+		//-------------------------------------------------
+		//calculate scores and statistics
+		//-------------------------------------------------
+		long double ave = 0.0, square_ave = 0.0;
+		vector<double>ScoreTable;
+		for(auto a: Where){
+			int WordCount = a.first.length(), NumAppearance = a.second.size();
+			double score = log2(WordCount) * NumAppearance;
+			ScoreTable.push_back(score);
+			ave += score;
+			square_ave  += (score*score);
+			cout << "\""<< a.first << "\"= Number of Appearance: " << NumAppearance << ", Score: "  << score << endl;
+		}
+		ave /= Where.size();
+		square_ave /= Where.size();
+		double variance = square_ave - ave*ave;
+		double standard_deviation = sqrt(variance);
+		cout << "<<statictics of score>> : average = " << ave << ", variance = " << variance << ", standard deviation = " << standard_deviation << endl;
+		cout << "standartized datas" << endl;
+		/*
+		for(auto s: ScoreTable){
+			cout << setfill('0') << setw(6) << "score: " << s << ", standardzed score: " << (s - ave)/standard_deviation;
+			if((s - ave)/standard_deviation >= 2.32)cout << " << this score is in te top of 1 percent >>";
+			cout << endl;
+		}
+		*/
+		ScoreTable.clear();
+		//ave = 0.0, square_ave = 0.0;
+		
+		//-------------------------------------------------
 		//extract strings most appeared in each group that has same number of length of string
+		//-------------------------------------------------
 		for(const refPSV& w: Where){
 			//cout << w.first << ", " << w.second.size() << endl;
 			if(!AppearMap.count(w.first.length())){
@@ -66,7 +108,10 @@ class DuplicateStringFinder{
 				AppearMap[w.first.length()].clear();
 			AppearMap[w.first.length()].push_back(w);
 		}
+		
+		//-------------------------------------------------
 		//print AppearMao
+		//-------------------------------------------------
 		for(auto a: AppearMap){
 			for(auto s: a.second){
 				cout << "--\"" << s.first << "\": ";
@@ -75,19 +120,42 @@ class DuplicateStringFinder{
 			}
 			cout << endl;
 		}
+		
+		//-------------------------------------------------
 		//calculate scores and statistics
-		double ave = 0.0, square_ave = 0.0, standard_deviation = 0.0;
+		//-------------------------------------------------
+		/*
+		double ave = 0.0, square_ave = 0.0;
+		vector<double>ScoreTable;
+		*/
 		for(auto a: AppearMap){
 			int WordCount = a.first, NumAppearance = a.second[0].second.size();
 			double score = log2(WordCount) * NumAppearance;
+			ScoreTable.push_back(score);
+			/*
 			ave += score;
-			square_ave  += (square_ave*square_ave);
+			square_ave  += (score*score);
 			cout << "\""<< a.first << "\"= Number of Appearance: " << NumAppearance << ", Score: "  << score << endl;
+			*/
 		}
+		/*
 		ave /= AppearMap.size();
 		square_ave /= AppearMap.size();
-		standard_deviation = square_ave - ave*ave;
+		double variance = square_ave - ave*ave;
+		double standard_deviation = sqrt(variance);
+		*/
+		cout << "<<statictics of score>> : average = " << ave << ", variance = " << variance << ", standard deviation = " << standard_deviation << endl;
+		cout << "standartized datas" << endl;
+		for(auto s: ScoreTable){
+			cout << setfill('0') << setw(6) << "score: " << s << ", standardzed score: " << (s - ave)/standard_deviation;
+			//if((s - ave)/standard_deviation >= 2.57)cout << " << this score is in te top of 0.5 percent >>";
+			if((s - ave)/standard_deviation >= limen)cout << " << this score is more than limen >>";
+			cout << endl;
+		}
+		
+		//-------------------------------------------------
 		//change AppearMap to PeriodMap
+		//-------------------------------------------------
 		for(auto a: AppearMap){
 			for(auto s: a.second){
 				vector<int> *nowVector = new vector<int>;
@@ -100,13 +168,19 @@ class DuplicateStringFinder{
 				}
 			}		
 		}
+		
+		//-------------------------------------------------
 		//print all PeriodMap
+		//-------------------------------------------------
 		for(auto p: PeriodMap){
 			cout << "PeriodMap: ";
 			for(auto now: *p)cout << now << ", ";
 			cout << endl;
 		}
+		
+		//-------------------------------------------------
 		//calculate common divisors
+		//-------------------------------------------------
 		for(auto p: PeriodMap){
 			//int min = (*p)[0];
 			int min = *min_element(p->begin(), p->end());
@@ -130,7 +204,10 @@ class DuplicateStringFinder{
 			}
 			cout << endl;
 		}
+		
+		//-------------------------------------------------
 		//print cnadidates
+		//-------------------------------------------------
 		cout << "Candidates: ";
 		for(auto c: Candidates) cout << c << ", ";
 		cout << endl;
@@ -167,7 +244,8 @@ int main(int argc, char *argv[]){
 	else dsf = new DuplicateStringFinder("abccabaabcccababcb");
 	dsf->PrintPlain();
 	dsf->StringAnalyzer();
-	dsf->SearchDuplicateString();
+	if(argc > 2)dsf->SearchDuplicateString(atoi(argv[2]));
+	else dsf->SearchDuplicateString(2.57);
 	
 	
 	return 0;
