@@ -1,7 +1,6 @@
+#include "../StatisticsCalculator/StatisticsCalculator.hpp"
 #include <string.h>
 #include <iostream>
-#include <iomanip>
-#include <memory>
 #include <vector>
 #include <map>
 #include <algorithm>
@@ -10,32 +9,6 @@
 using namespace std;
 typedef pair<string, vector<int>> PSV;
 typedef pair<const string, vector<int>> refPSV;
-
-class StatisticsCalculator{
-private:
-	double sum = 0.0, square_sum = 0.0;
-	double average = 0.0, square_average = 0.0;
-	double variance = 0.0, standard_deviation = 1.0;
-	int size = 0;
-public:
-	void AddData(double data){
-		sum += data;
-		square_sum += (data*data);
-		size++;
-	}
-	double Sum(){ return sum; }
-	double Ave(){ return sum/size; }
-	double SquareAve(){ return square_sum/size; }
-	double Variance(){ return square_average - pow(average, 2.0); }
-	double StandardDeviation(){ return sqrt(variance); }
-	double Standardize(double data){ return (data - average)/standard_deviation; }
-	void AllCalc(){
-		average = Ave();
-		square_average = SquareAve();
-		variance = Variance();
-		standard_deviation = StandardDeviation();
-	}
-};
 
 class DuplicateStringFinder{
 	public:
@@ -104,23 +77,17 @@ class DuplicateStringFinder{
 		//-------------------------------------------------
 		//calculate scores and statistic
 		//-------------------------------------------------
+		StatisticsCalculator *sc = new StatisticsCalculator;
+		
 		cout << "<< Print number of appearance and score about each string >>" << endl;
-		long double ave = 0.0, square_ave = 0.0;
-		vector<double>ScoreTable;
 		for(auto a: Where){
 			int WordCount = a.first.length(), NumAppearance = a.second.size();
-			double score = log2(WordCount) * NumAppearance;
-			ave += score;
-			square_ave  += (score*score);
-			cout << "\""<< a.first << "\"= Number of Appearance: " << NumAppearance << ", Score: "  << score << endl;
+			sc->AddData( (log2(WordCount) * NumAppearance) );
+			cout << "\""<< a.first << "\"= Number of Appearance: " << NumAppearance << ", Score: "  << (log2(WordCount) * NumAppearance) << endl;
 		}
+		sc->AllCalcu();
 		cout << endl;
-		
-		ave /= Where.size();
-		square_ave /= Where.size();
-		double variance = square_ave - ave*ave;
-		double standard_deviation = sqrt(variance);
-		cout << "<<statictics of score>> : average = " << ave << ", variance = " << variance << ", standard deviation = " << standard_deviation << endl;
+		cout << "<<statictics of score>> : average = " << sc->Ave() << ", variance = " << sc->Variance() << ", standard deviation = " << sc->StandardDeviation() << endl;
 		cout << endl;
 		
 		//-------------------------------------------------
@@ -157,10 +124,10 @@ class DuplicateStringFinder{
 		for(auto a: AppearMap){
 			int WordCount = a.first, NumAppearance = a.second[0].second.size();
 			double score = log2(WordCount) * NumAppearance;
-			cout << "--length of string: " << a.first << ", score: " << score << ", " << (score - ave)/standard_deviation << endl;
-			if((score - ave)/standard_deviation < limen)continue;
+			cout << "--length of string: " << a.first << ", score: " << score << ", " << sc->Standardize(score) << endl;
+			if(sc->Standardize(score) < limen)continue;
 			for(auto s: a.second)cout << s.first << ", ";
-			cout << "are passed the limen test!" << endl;
+			cout << "=== these wards are passed the limen test! ===" << endl;
 			
 			PeriodMap[a.first] = new vector<refPSV>;
 			vector<refPSV>* AddrefPSV = PeriodMap[a.first];
