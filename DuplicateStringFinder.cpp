@@ -121,6 +121,7 @@ class DuplicateStringFinder{
 		//change AppearMap to PeriodMap
 		//-------------------------------------------------
 		cout << "<< Craeting PeriodMap >>" << endl;
+		cout << "limen: " << limen << endl;
 		for(auto a: AppearMap){
 			int WordCount = a.first, NumAppearance = a.second[0].second.size();
 			double score = log2(WordCount) * NumAppearance;
@@ -223,8 +224,8 @@ int main(int argc, char *argv[]){
 	else dsf = new DuplicateStringFinder("abccabaabcccababcb");
 	//dsf->PrintPlain();
 	dsf->StringAnalyzer();
-	if(argc > 2) result = dsf->SearchDuplicateString(atoi(argv[2]));
-	else result = dsf->SearchDuplicateString(2.57);
+	if(argc > 2) result = dsf->SearchDuplicateString(atof(argv[2]));
+	else result = dsf->SearchDuplicateString(2.4);
 	
 	
 	return 0;
